@@ -14,6 +14,10 @@ config/name="Новий проєкт гри"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
+[dotnet]
+
+project/assembly_name="Новий проєкт гри"
+
 [physics]
 
 3d/physics_engine="Jolt Physics"
