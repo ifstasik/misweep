@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://deow8b78cc5a7"]
+
+[sub_resource type="TileSet" id="TileSet_cwsi1"]
+
+[node name="Node2D" type="Node2D" unique_id=660406964]
+
+[node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=984038303]
+tile_set = SubResource("TileSet_cwsi1")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=872883538]
