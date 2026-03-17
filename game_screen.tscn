@@ -1,0 +1,22 @@
+[gd_scene format=3 uid="uid://c5nxgx2gfqtwv"]
+
+[sub_resource type="TileSet" id="TileSet_cwsi1"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_cwsi1"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_t5odh"]
+size = Vector2(1153, 648)
+
+[node name="Node2D" type="Node2D" unique_id=660406964]
+
+[node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=984038303]
+tile_set = SubResource("TileSet_cwsi1")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=872883538]
+
+[node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=548864716]
+physics_material_override = SubResource("PhysicsMaterial_cwsi1")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D" unique_id=2068205429]
+position = Vector2(0.5, 0)
+shape = SubResource("RectangleShape2D_t5odh")
