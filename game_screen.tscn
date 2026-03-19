@@ -3,6 +3,7 @@
 [ext_resource type="Texture2D" uid="uid://bckhsqk63y1rp" path="res://img/DozerSprite.jpg" id="1_t5odh"]
 [ext_resource type="Script" uid="uid://wrled3uvi8jq" path="res://Click.cs" id="2_xwjjp"]
 [ext_resource type="Texture2D" uid="uid://ntpd6fdbdkns" path="res://img/mineMAP.png" id="3_norob"]
+[ext_resource type="Script" uid="uid://c0o7wmhbq6u6n" path="res://Minefield.cs" id="4_yla3h"]
 
 [sub_resource type="TileSet" id="TileSet_yla3h"]
 tile_size = Vector2i(20, 20)
@@ -29,7 +30,6 @@ sources/0 = SubResource("TileSetAtlasSource_j7yda")
 [node name="Node2D" type="Node2D" unique_id=90595413]
 
 [node name="Dozer test" type="Node2D" parent="." unique_id=660406964]
-visible = false
 
 [node name="Camera2D" type="Camera2D" parent="Dozer test" unique_id=872883538]
 z_index = 10
@@ -49,3 +49,4 @@ tile_set = SubResource("TileSet_yla3h")
 
 [node name="TileMapLayer" type="TileMapLayer" parent="minesweeper" unique_id=1965947462]
 tile_set = SubResource("TileSet_lxtpa")
+script = ExtResource("4_yla3h")
