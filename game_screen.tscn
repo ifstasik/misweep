@@ -1,12 +1,8 @@
 [gd_scene format=3 uid="uid://c5nxgx2gfqtwv"]
 
 [ext_resource type="Texture2D" uid="uid://bckhsqk63y1rp" path="res://img/DozerSprite.jpg" id="1_t5odh"]
-[ext_resource type="Script" uid="uid://wrled3uvi8jq" path="res://Click.cs" id="2_xwjjp"]
 [ext_resource type="Texture2D" uid="uid://ntpd6fdbdkns" path="res://img/mineMAP.png" id="3_norob"]
 [ext_resource type="Script" uid="uid://c0o7wmhbq6u6n" path="res://Minefield.cs" id="4_yla3h"]
-
-[sub_resource type="TileSet" id="TileSet_yla3h"]
-tile_size = Vector2i(20, 20)
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_j7yda"]
 texture = ExtResource("3_norob")
@@ -27,9 +23,18 @@ texture = ExtResource("3_norob")
 [sub_resource type="TileSet" id="TileSet_lxtpa"]
 sources/0 = SubResource("TileSetAtlasSource_j7yda")
 
+[sub_resource type="Gradient" id="Gradient_norob"]
+offsets = PackedFloat32Array(0)
+colors = PackedColorArray(0.33931628, 0.67570955, 0.56950986, 1)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_yla3h"]
+gradient = SubResource("Gradient_norob")
+width = 257
+
 [node name="Node2D" type="Node2D" unique_id=90595413]
 
 [node name="Dozer test" type="Node2D" parent="." unique_id=660406964]
+visible = false
 
 [node name="Camera2D" type="Camera2D" parent="Dozer test" unique_id=872883538]
 z_index = 10
@@ -38,15 +43,19 @@ z_index = 10
 position = Vector2(2.3841858e-07, -6.186962e-05)
 scale = Vector2(0.2, 0.2)
 texture = ExtResource("1_t5odh")
-script = ExtResource("2_xwjjp")
-
-[node name="TileMapLayer" type="TileMapLayer" parent="Dozer test" unique_id=514262989]
-tile_set = SubResource("TileSet_yla3h")
 
 [node name="minesweeper" type="Node2D" parent="." unique_id=1656888543]
 
 [node name="Camera2D" type="Camera2D" parent="minesweeper" unique_id=737357422]
+ignore_rotation = false
 
 [node name="TileMapLayer" type="TileMapLayer" parent="minesweeper" unique_id=1965947462]
+scale = Vector2(2, 2)
 tile_set = SubResource("TileSet_lxtpa")
 script = ExtResource("4_yla3h")
+
+[node name="Sprite2D" type="Sprite2D" parent="minesweeper" unique_id=1056533988]
+z_index = -10
+position = Vector2(-8.499985, 1.5000153)
+scale = Vector2(4.642023, 681)
+texture = SubResource("GradientTexture1D_yla3h")
