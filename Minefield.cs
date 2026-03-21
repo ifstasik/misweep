@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 public partial class Minefield : TileMapLayer
 {
@@ -13,22 +14,23 @@ public partial class Minefield : TileMapLayer
 		{ "open",   new Vector2I(2, 2) },
 		{ "bomb",   new Vector2I(3, 2) },
 		{ "flag",   new Vector2I(4, 2) },
-		{ "one",    new Vector2I(1, 1) },
-		{ "two",    new Vector2I(1, 2) },
-		{ "three",  new Vector2I(1, 3) },
-		{ "four",   new Vector2I(1, 4) },
-		{ "five",   new Vector2I(1, 5) },
-		{ "six",    new Vector2I(1, 6) },
-		{ "seven",  new Vector2I(1, 7) },
-		{ "eight",  new Vector2I(1, 8) }
+		{ "1",    new Vector2I(1, 1) },
+		{ "2",    new Vector2I(2, 1) },
+		{ "3",  new Vector2I(3, 1) },
+		{ "4",   new Vector2I(4, 1) },
+		{ "5",   new Vector2I(5, 1) },
+		{ "6",    new Vector2I(6, 1) },
+		{ "7",  new Vector2I(7, 1) },
+		{ "8",  new Vector2I(8, 1) }
 	};
 	private Dictionary<Vector2I, string> Field = new Dictionary<Vector2I, string>();
 	
-	int mapWidth = 10;
-	int mapHeight = 20;
-	int bombNum = 10;
-	int offsetX = -5;
-	int offsetY = -10;
+	static int mapWidth = 10;
+	static int mapHeight = 20;
+	int bombNum = 20;
+	int offsetX = -1*(mapWidth/2);
+	int offsetY = -1*(mapHeight/2);
+	bool hasOpened = false;
 	
 	private const int TargetAlternativeTile  = 0;
 	
@@ -37,60 +39,200 @@ public partial class Minefield : TileMapLayer
 	{
 		rng.Randomize();
 		
+		for(int x = 0; x < mapWidth; x++){
+				for(int y = 0; y < mapHeight;y++){
+					Field.Add(new Vector2I(x,y), "closed");
+				}
+			}
+		
 		
 		FillMap(mapWidth, mapHeight, offsetX, offsetY);
 		SetBombs(mapWidth, mapHeight, bombNum, offsetX, offsetY);
+		SetNums(mapWidth, mapHeight, offsetX, offsetY);
+		foreach(KeyValuePair<Vector2I, string> Tile in Field){
+			if(Tile.Value == "closed"){
+				SetCell(new Vector2I(Tile.Key.X + offsetX, Tile.Key.Y + offsetY), TargetSourceId, Cells["flag"]);
+				break;
+			}
+		}
 	}
 
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
 	public override void _Process(double delta)
 	{
+		int hiddenNonBombs = Field.Values.Count(v => v == "closed" || v is "1" or "2" or "3" or "4" or "5" or "6" or "7" or "8");
+		
+		if (hiddenNonBombs == 0)
+		{
+			GD.Print("You win!");
+			SetProcess(false); 
+		}
 	}
 	private void FillMap(int width, int height, int offsetX, int offsetY)
 	{
-		for (int x = 0; x < width; x++)
+		foreach(KeyValuePair<Vector2I, string> Tile in Field)
 		{
-			for (int y = 0; y < height; y++)
-			{
-				SetCell(new Vector2I(x + offsetX, y + offsetY), TargetSourceId, Cells["closed"]);
-			}
+			Vector2I Position = new Vector2I(Tile.Key.X + offsetX, Tile.Key.Y + offsetY);
+			SetCell(Position, TargetSourceId, Cells["closed"]);
 		}
 		
 	}
 	
 	private void SetBombs(int width, int height, int bombNum, int offsetX, int offsetY)
-	{	
-		for(int i=0;i < bombNum;i++){
-			try{
-				Vector2I CellPos = new Vector2I(rng.RandiRange(0, width-1) + offsetX, rng.RandiRange(0,height-1) + offsetY);
-				Field.Add(CellPos, "bomb");
+	{
+		int placed = 0;
+		while (placed < bombNum)
+		{
+			Vector2I cellPos = new Vector2I( //global positioning NEEDS OFFSET
+				rng.RandiRange(0, width - 1) , 
+				rng.RandiRange(0, height - 1)
+			);
+			
+			if(Field[cellPos] != "bomb")
+			{
+				Field[cellPos] = "bomb" ;
+				placed++;
 			}
-			catch{
-				Vector2I CellPos = new Vector2I(rng.RandiRange(0, width-1) + offsetX, rng.RandiRange(0,height-1) + offsetY);
-				Field.Add(CellPos, "bomb");
+			else{continue;}
+		}
+	}
+	private void SetNums(int width, int height, int offsetX, int offsetY)
+	{
+			//width,x : 0-9
+			//height,y : 0-19
+			
+		foreach(KeyValuePair<Vector2I, string> Tile in Field)
+		{
+			Vector2I cellPos = new Vector2I(Tile.Key.X,Tile.Key.Y);
+			Vector2I tilePosForSetting = new Vector2I(Tile.Key.X + offsetX, Tile.Key.Y + offsetY);
+			(int bombsAround,bool BombOnCell) = CheckNeighbours(cellPos);
+			
+			
+			if(!BombOnCell && bombsAround > 0){
+				Field[cellPos] = $"{bombsAround}";
 			}
 		}
-		foreach (var bomb in Field){
-			SetCell(bomb.Key, TargetSourceId, Cells["bomb"]);
+		
+			//check for neigbors bobm
+			
+			
+			//if there is bobm, increase local bombCounter
+			//if no bobms, skip the cell and increase placed counter
+			
+	}
+
+	public (int, bool) CheckNeighbours(Vector2I cellPos){
+		bool BombOnCell = false;
+		if(Field[cellPos] == "bomb"){
+			return (0, BombOnCell = true);
 		}
+		
+		int bombCount = 0;
+		for(int x=-1 ; x <= 1; x++){ //starts from top_left
+			for(int y=-1 ; y <= 1; y++){
+				if(Field.ContainsKey(new Vector2I(cellPos.X + x, cellPos.Y + y)) && Field[new Vector2I(cellPos.X + x, cellPos.Y + y)] == "bomb"){
+					bombCount++;	
+				};
+			}
+		}
+		
+		return (bombCount, BombOnCell);
 	}
 	
 	
+	public void OpenArea(Vector2I startTileSetting)
+	{
+		Queue<Vector2I> toProcess = new Queue<Vector2I>();
+		toProcess.Enqueue(startTileSetting);
+
+		HashSet<Vector2I> visited = new HashSet<Vector2I>();
+
+		while (toProcess.Count > 0)
+		{
+			Vector2I currentSetting = toProcess.Dequeue();
+			if (visited.Contains(currentSetting)) continue;
+			visited.Add(currentSetting);
+
+			Vector2I dictPos = new Vector2I(currentSetting.X - offsetX, currentSetting.Y - offsetY);
+			if (!Field.ContainsKey(dictPos)) continue;
+
+			string content = Field[dictPos];
+
+			// Якщо це БОМБА — зупиняємося (не відкриваємо її)
+			if (content == "bomb") continue;
+
+			// Якщо це ЦИФРА — показуємо її і зупиняємо розширення в цей бік
+			if (new[] {"1","2","3","4","5","6","7","8"}.Contains(content))
+			{
+				SetCell(currentSetting, TargetSourceId, Cells[content]);
+				continue; 
+			}
+
+			// Якщо це ПОРОЖНЯ клітина (була "closed" і стала "open")
+			if (content == "closed")
+			{
+				SetCell(currentSetting, TargetSourceId, Cells["open"]);
+				Field[dictPos] = "open"; // Позначаємо як відкриту в словнику
+
+				// Додаємо всіх 8 сусідів у чергу для перевірки
+				for (int x = -1; x <= 1; x++)
+				{
+					for (int y = -1; y <= 1; y++)
+					{
+						if (x == 0 && y == 0) continue;
+						toProcess.Enqueue(new Vector2I(currentSetting.X + x, currentSetting.Y + y));
+					}
+				}
+			}
+		}
+	}	
+		
 	public override void _Input(InputEvent @event)
 	{
 		if (@event is InputEventMouseButton mouseClick && mouseClick.Pressed)
-		{	
-			Vector2 mousePositionFloat = ToLocal(GetGlobalMousePosition());
-			Vector2I mousePos = new Vector2I(Convert.ToInt32(mousePositionFloat.X), Convert.ToInt32(mousePositionFloat.Y));
+		{
+			// 1. Отримуємо локальну позицію миші відносно вузла
+			Vector2 localPos = ToLocal(GetGlobalMousePosition());
 			
-			Vector2I TILE = ConvertToTile(mousePos);
+			// 2. Використовуємо вбудований метод для конвертації в координати сітки
+			Vector2I tilePosForSetting = LocalToMap(localPos);
+			Vector2I tilePosForUser = new Vector2I(tilePosForSetting.X - offsetX, tilePosForSetting.Y - offsetY);
+			
+			if (!Field.ContainsKey(tilePosForUser)) return;
+			
+			
+			//DEBUG_DEBUG_DEBUG_DEBUG_DEBUG_DEBUG_DEBUG_DEBUG
+			//GD.Print($"click onto tile: {tilePosForUser}");
+			//GD.Print($"on this tile is: {Field[tilePosForUser]}");
+			
+			string content = Field[tilePosForUser];
+			
+			if(Field[tilePosForUser] == "closed"){
+				OpenArea(tilePosForSetting);
+			}
+			
+			
+			
+			if (content == "bomb")
+			{
+				SetCell(tilePosForSetting, TargetSourceId, Cells["bomb"]);
+				GD.Print("Kaboom!");
+			}
+			else 
+			{
+				if (new[] {"1","2","3","4","5","6","7","8"}.Contains(content))
+				{
+					SetCell(tilePosForSetting, TargetSourceId, Cells[content]);
+				}
+				else
+				{
+					SetCell(tilePosForSetting, TargetSourceId, Cells["open"]);
+				}
+			}
+			
+			
+			
 		}
-	}
-	public Vector2I ConvertToTile(Vector2I mousePosition){
-		int newTileX = (mousePosition.X - offsetX*16)/16;
-		int newTileY = (mousePosition.Y - offsetY*16)/16;
-		Vector2I Tile = new Vector2I(newTileX, newTileY);
-		GD.Print(newTileX + "  -  " + newTileY);
-		return Tile;
+	
 	}
 }
