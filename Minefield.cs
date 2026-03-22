@@ -64,9 +64,8 @@ public partial class Minefield : TileMapLayer
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
 	public override void _Process(double delta)
 	{
-		int NonBombs = Field.Values.Count(v => v == "open" || v is "1" or "2" or "3" or "4" or "5" or "6" or "7" or "8");
 		
-		if (Field.Count()-NonBombs == bombNum)
+		if (OpenedOnes.Count(v => v.Value == false) == bombNum)
 		{
 			GD.Print("You win!");
 			SetProcess(false); 
