@@ -24,6 +24,8 @@ public partial class Minefield : TileMapLayer
 		{ "8",  new Vector2I(8, 1) }
 	};
 	private Dictionary<Vector2I, string> Field = new Dictionary<Vector2I, string>();
+	private Dictionary<Vector2I, bool> FlaggedOnes = new Dictionary<Vector2I, bool>();
+	private Dictionary<Vector2I, bool> OpenedOnes = new Dictionary<Vector2I, bool>();
 	
 	static int mapWidth = 10;
 	static int mapHeight = 20;
@@ -42,6 +44,8 @@ public partial class Minefield : TileMapLayer
 		for(int x = 0; x < mapWidth; x++){
 				for(int y = 0; y < mapHeight;y++){
 					Field.Add(new Vector2I(x,y), "closed");
+					FlaggedOnes.Add(new Vector2I(x,y), false);
+					OpenedOnes.Add(new Vector2I(x,y), false);
 				}
 			}
 		
@@ -60,9 +64,9 @@ public partial class Minefield : TileMapLayer
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
 	public override void _Process(double delta)
 	{
-		int hiddenNonBombs = Field.Values.Count(v => v == "closed" || v is "1" or "2" or "3" or "4" or "5" or "6" or "7" or "8");
+		int NonBombs = Field.Values.Count(v => v == "open" || v is "1" or "2" or "3" or "4" or "5" or "6" or "7" or "8");
 		
-		if (hiddenNonBombs == 0)
+		if (Field.Count()-NonBombs == bombNum)
 		{
 			GD.Print("You win!");
 			SetProcess(false); 
@@ -165,6 +169,7 @@ public partial class Minefield : TileMapLayer
 			if (new[] {"1","2","3","4","5","6","7","8"}.Contains(content))
 			{
 				SetCell(currentSetting, TargetSourceId, Cells[content]);
+				OpenedOnes[dictPos] = true;
 				continue; 
 			}
 
@@ -173,7 +178,8 @@ public partial class Minefield : TileMapLayer
 			{
 				SetCell(currentSetting, TargetSourceId, Cells["open"]);
 				Field[dictPos] = "open"; // Позначаємо як відкриту в словнику
-
+				OpenedOnes[dictPos] = true;
+				
 				// Додаємо всіх 8 сусідів у чергу для перевірки
 				for (int x = -1; x <= 1; x++)
 				{
@@ -189,50 +195,69 @@ public partial class Minefield : TileMapLayer
 		
 	public override void _Input(InputEvent @event)
 	{
-		if (@event is InputEventMouseButton mouseClick && mouseClick.Pressed)
-		{
+		if (@event is InputEventMouseButton mouseClick && mouseClick.Pressed){
 			// 1. Отримуємо локальну позицію миші відносно вузла
-			Vector2 localPos = ToLocal(GetGlobalMousePosition());
-			
-			// 2. Використовуємо вбудований метод для конвертації в координати сітки
-			Vector2I tilePosForSetting = LocalToMap(localPos);
-			Vector2I tilePosForUser = new Vector2I(tilePosForSetting.X - offsetX, tilePosForSetting.Y - offsetY);
-			
-			if (!Field.ContainsKey(tilePosForUser)) return;
-			
-			
-			//DEBUG_DEBUG_DEBUG_DEBUG_DEBUG_DEBUG_DEBUG_DEBUG
-			//GD.Print($"click onto tile: {tilePosForUser}");
-			//GD.Print($"on this tile is: {Field[tilePosForUser]}");
-			
-			string content = Field[tilePosForUser];
-			
-			if(Field[tilePosForUser] == "closed"){
-				OpenArea(tilePosForSetting);
-			}
-			
-			
-			
-			if (content == "bomb")
-			{
-				SetCell(tilePosForSetting, TargetSourceId, Cells["bomb"]);
-				GD.Print("Kaboom!");
-			}
-			else 
-			{
-				if (new[] {"1","2","3","4","5","6","7","8"}.Contains(content))
-				{
-					SetCell(tilePosForSetting, TargetSourceId, Cells[content]);
+				Vector2 localPos = ToLocal(GetGlobalMousePosition());
+				
+				// 2. Використовуємо вбудований метод для конвертації в координати сітки
+				Vector2I tilePosForSetting = LocalToMap(localPos);
+				Vector2I tilePosForUser = new Vector2I(tilePosForSetting.X - offsetX, tilePosForSetting.Y - offsetY);
+				
+				string content = Field[tilePosForUser];
+				
+				
+			if(mouseClick.ButtonIndex == MouseButton.Left){
+					
+				
+				if (!Field.ContainsKey(tilePosForUser)) return;
+				
+				
+				//DEBUG_DEBUG_DEBUG_DEBUG_DEBUG_DEBUG_DEBUG_DEBUG
+				//GD.Print($"click onto tile: {tilePosForUser}");
+				//GD.Print($"on this tile is: {Field[tilePosForUser]}");
+				
+				
+				if(Field[tilePosForUser] == "closed"){
+					OpenArea(tilePosForSetting);
 				}
-				else
+				
+				
+				
+				if (content == "bomb")
 				{
-					SetCell(tilePosForSetting, TargetSourceId, Cells["open"]);
+					SetCell(tilePosForSetting, TargetSourceId, Cells["bomb"]);
+					GD.Print("Kaboom!");
+					OpenedOnes[tilePosForUser] = true;
+				}
+				else 
+				{
+					if (new[] {"1","2","3","4","5","6","7","8"}.Contains(content))
+					{
+						SetCell(tilePosForSetting, TargetSourceId, Cells[content]);
+						OpenedOnes[tilePosForUser] = true;
+					}
+					else
+					{
+						SetCell(tilePosForSetting, TargetSourceId, Cells["open"]);
+						OpenedOnes[tilePosForUser] = true;
+					}
 				}
 			}
 			
+			else if(mouseClick.ButtonIndex == MouseButton.Right){
+				if(!FlaggedOnes[tilePosForUser] && !OpenedOnes[tilePosForUser]){
+					SetCell(tilePosForSetting, TargetSourceId, Cells["flag"]);
+					FlaggedOnes[tilePosForUser] = true;
+				}
+				else if(FlaggedOnes[tilePosForUser] && !OpenedOnes[tilePosForUser]){
+					SetCell(tilePosForSetting, TargetSourceId, Cells["closed"]);
+					FlaggedOnes[tilePosForUser] = false;
+				}
+			}
+			
+		}
 			
 			
 		}
 	
 	}
-}
